@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Chair Decor</title>
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/2.2.0/jquery.min.js"></script>
+</head>
+<body>
+<form>
+<div>
+Category
+<select id="category">
+</select>
+</div>
+<div>
+Description
+<input type="text" id="description">
+</div>
+<div>
+<input type="button" value="Add" onclick="add_style()">
+</div>
+<div id="history">
+</div>
+</form>
+<script>
+$.get('category.php', function(data){
+var categories = JSON.parse(data);
+for(i in categories){
+	var key = i;
+	var name = categories[key];
+	$('#category').append($('<option>', {
+		value: key,
+		text: name
+	}));
+}
+});
+function add_style(){
+	$.post('addstyle.php',
+	{
+		category: $('#category').val(),
+		description: $('#description').val()
+	},function(data){
+	var result = JSON.parse(data);
+		var history = "Could not add style(may already exist in this category)</br>";
+		if(result){
+			history = "Created style " + $('#description').val() + " in category " + $("#category option:selected").text(); + "</br>";
+		}
+		$('#history').append(history);
+	});
+}
+</script>
+</body>
+</html>
