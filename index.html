@@ -5,6 +5,8 @@
 <script src="https://ajax.googleapis.com/ajax/libs/jquery/2.2.0/jquery.min.js"></script>
 </head>
 <body>
+<div>
+Styles
 <form>
 <div>
 Category
@@ -12,8 +14,8 @@ Category
 </select>
 </div>
 <div>
-Description
-<input type="text" id="description">
+Style
+<input type="text" id="style">
 </div>
 <div>
 <input type="button" value="Add" onclick="add_style()">
@@ -37,16 +39,123 @@ function add_style(){
 	$.post('addstyle.php',
 	{
 		category: $('#category').val(),
-		description: $('#description').val()
+		description: $('#style').val()
 	},function(data){
 	var result = JSON.parse(data);
 		var history = "Could not add style(may already exist in this category)</br>";
 		if(result){
-			history = "Created style " + $('#description').val() + " in category " + $("#category option:selected").text(); + "</br>";
+			history = "Created style " + $('#style').val() + " in category " + $("#category option:selected").text(); + "</br>";
 		}
 		$('#history').append(history);
 	});
 }
 </script>
+</div>
+
+<div>
+Inventory
+
+<div>
+Warehouse
+<select id="invwarehouse">
+</select>
+</div>
+
+<div>
+Category
+<select id="invcategory" onchange="getStyle();">
+</select>
+</div>
+
+<div>
+Style
+<select id="invstyle">
+</select>
+</div>
+
+<div>
+Size
+<select id="invsize">
+</select>
+</div>
+
+<div>
+Quantity
+<input type="number" min="0" id="invquantity">
+</div>
+
+<div>
+<input type="button" value="Change Quantity" onclick="changequantity()">
+</div>
+
+</div>
+<script>
+$.get('warehouse.php', function(data){
+var warehouses = JSON.parse(data);
+for(i in warehouses){
+	var key = i;
+	var name = warehouses[key];
+	$('#invwarehouse').append($('<option>', {
+		value: key,
+		text: name
+	}));
+}
+});
+
+$.get('category.php', function(data){
+var categories = JSON.parse(data);
+for(i in categories){
+	var key = i;
+	var name = categories[key];
+	$('#invcategory').append($('<option>', {
+		value: key,
+		text: name
+	}));
+}
+});
+
+$.get('size.php', function(data){
+var size = JSON.parse(data);
+for(i in size){
+	var key = i;
+	var name = size[key];
+	$('#invsize').append($('<option>', {
+		value: key,
+		text: name
+	}));
+}
+});
+
+function getStyle(){
+
+	$('#invstyle').empty();
+
+	var categoryid = $('#invcategory').val();
+	$.post('style.php', {categoryid: categoryid}, function(data){
+	var styles = JSON.parse(data);
+	for(i in styles){
+		var key = i;
+		var name = styles[key];
+		$('#invstyle').append($('<option>', {
+			value: key,
+			text: name
+		}));
+	}
+	});
+}
+
+function changequantity(){
+	var warehouseid = $('#invwarehouse').val();
+	var sizeid = $('#invsize').val();
+	var styleid = $('#invstyle').val();
+	var quantity = $('#invquantity').val();
+	$.post('setquantity.php', {warehouseid: warehouseid, sizeid: sizeid, styleid: styleid, quantity: quantity},function(data){
+	var result = JSON.parse(data);
+		console.log(result);
+	});
+}
+</script>
+
+
 </body>
 </html>
