@@ -1,0 +1,215 @@
+<html>
+<head>
+<title>Create Booking</title>
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/2.2.0/jquery.min.js"></script>
+<script>
+//Put this in an object
+//Customer has specific warhouse? or selects warehouse?
+var selectedCatetory = "";
+var selectedCategoryName = "";
+var selectedQuantity = "";
+var selectedSize = "";
+var selectedSizeName = "";
+var selectedStyle = "";
+var selectedStyleName = "";
+var selectedStyleSizeId = "";
+
+var order = {};
+order.items = [];
+var sizes = [];
+
+function clearOrder(){
+	order = {};
+	order.items = [];
+	refreshOrder();
+	resetItem();
+	dateQuestion();
+}
+
+$.get('size.php?action=getall', function(data){
+	var results = JSON.parse(data);
+	$('#size').html("");
+	for(result in results){
+		var id = result;
+		var name = results[result];
+		sizes[id] = name;
+	}
+});
+
+
+function selectDate(){
+	if($('#dateField').val() != ""){
+		order.date = $('#dateField').val();
+		$('#date').html("Date: " + order.date);
+		getCategories();
+	} else {
+		console.log('You must select a date to create an order');
+	}
+}
+
+function dateQuestion(){
+	$('#date').html('Which day do you need it? <input type="date" id="dateField"> <input type="button" value="Select Items" onclick="selectDate();">');
+}
+</script>
+</head>
+<body>
+<div id="instructions">
+<ol>
+<li>Select Date
+<li>Choose Category
+<li>Quantity
+<li>Choose Styles and add to order
+<li>Return to step 2 for next item or complete order
+</ol>
+</div>
+<div id="date">
+
+</div>
+<div id="what">
+</div>
+<div id="howmuch">
+</div>
+<div id="size">
+</div>
+<div id="style">
+</div>
+<div id="startover">
+<input type="button" value="Reset Selection" onclick="resetItem(); if(order.date){getCategories()};">
+</div>
+<div id="ordersummary">
+Order is empty
+</div>
+<div id="clearorder">
+<input type="button" value="Clear Order" onclick="clearOrder();">
+</div>
+<script>
+dateQuestion();
+function showCategory(id, name){
+	selectedCatetory = id;
+	selectedCategoryName = name;
+	$('#what').html(selectedCategoryName);
+	$('#howmuch').html('How many do you need? <input type="number" id="quantityField" min="1"> <input type="button" value="Select Size" onclick="getSize(selectedCatetory, $(\'#quantityField\').val());">');
+}
+
+function getSize(id, quantity){
+	if(quantity != "" && quantity > 0){
+		selectedQuantity = quantity;
+		$('#howmuch').html('Quantity: ' + quantity);
+		$('#size').html('Size: ');
+		$.get('inventory.php?action=getsizes&startdate='+order.date+'&enddate='+order.date+'&categoryid='+selectedCatetory+'&quantity='+selectedQuantity, function(data){
+			var results = JSON.parse(data);
+			if(results.length == 0){
+				$('#size').html("Sorry we do not have "+selectedQuantity+" "+selectedCategoryName+" in any one size/style.");
+			} else {
+				$('#size').html("");
+				for(result in results){
+					var id = result;
+					var name = results[result];
+					$('#size').append('<a href="" onclick="showStyles('+id+', \''+sizes[id]+'\'); return false;">'+sizes[id]+'</a> ');
+				}
+			}
+		});
+	}
+}
+
+function getCategories(){
+	$.get('category.php?action=getall', function(data){
+		var results = JSON.parse(data);
+		$('#what').html("What do you need? ");
+		for(result in results){
+			var id = result;
+			var name = results[result];
+			$('#what').append('<a href="" onclick="showCategory('+id+', \''+name+'\'); return false;">'+name+'</a> ');
+		}
+	});
+}
+
+function showStyles(id, name){
+	selectedSize = id;
+	selectedSizeName = name;
+	$('#size').html('Size: ' + name);
+	$.get('inventory.php?action=getstyles&sizeid='+selectedSize+'&categoryid='+selectedCatetory+'&quantity='+selectedQuantity, function(data){
+		var results = JSON.parse(data);
+		$('#style').html("");
+		for(result in results){
+			var id = result;
+			var name = results[result];
+			$.get('style.php?action=get&id='+name.styleid, function(styledata){
+				var styleResults = JSON.parse(styledata);
+				for(styleResult in styleResults){
+					var styleid = styleResult;
+					var stylename = styleResults[styleResult];
+					$('#style').append('<a href="" onclick="selectStyle('+styleid+', \''+stylename.name+'\', '+id+'); return false;">Add '+stylename.name+' to order</a> ');
+				}
+			});
+		}
+	});
+}
+
+function selectStyle(id, name, stylesizeid){
+	selectedStyle = id;
+	selectedStyleName = name;
+	selectedStyleSizeId = stylesizeid;
+	var orderItem = {};
+
+	orderItem.category = selectedCatetory;
+	orderItem.categoryName = selectedCategoryName;
+	orderItem.quantity = selectedQuantity;
+	orderItem.size = selectedSize;
+	orderItem.sizeName = selectedSizeName;
+	orderItem.style = selectedStyle;
+	orderItem.styleName = selectedStyleName;
+	orderItem.styleSize = selectedStyleSizeId;
+	order.items.push(orderItem);
+	refreshOrder();
+
+	resetItem();
+	getCategories();
+}
+
+function resetItem(){
+	selectedCatetory = "";
+	selectedCategoryName = "";
+	selectedQuantity = "";
+	selectedSize = "";
+	selectedSizeName = "";
+	selectedStyle = "";
+	selectedStyleName = "";
+	selectedStyleSizeId = "";
+	$('#style').html("");
+	$('#size').html("");
+	$('#howmuch').html("");
+	$('#what').html("");
+}
+
+function refreshOrder(){
+	$('#ordersummary').html("");
+	if(order.items.length == 0){
+		$('#ordersummary').html("Order is empty");
+	} else {
+
+		$('#ordersummary').html(order.items.length + " items in order on " + order.date);
+		for(i = 0; i < order.items.length; i++){
+			$('#ordersummary').append('<div class="orderitem">'+order.items[i].quantity + ' ' + order.items[i].categoryName + ' ' + order.items[i].sizeName + ' ' + order.items[i].styleName + ' <a href="" onclick="order.items.splice('+i+', 1); refreshOrder(); return false;">Remove</a></div>');
+		}
+		$('#ordersummary').append('<input type="button" value="Submit Order" onclick="submitOrder();">');
+	}
+}
+
+function submitOrder(){
+	 $.ajax({
+		url: 'submitorder.php',
+		type: 'post',
+		dataType: 'json',
+		success: function (data) {
+			clearOrder();
+			console.log(data);
+		},
+		data: JSON.stringify(order)
+	});
+
+}
+
+</script>
+</body>
+</html>
