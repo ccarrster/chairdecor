@@ -1,0 +1,62 @@
+<html>
+<head>
+<title>Order Approval</title>
+</head>
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/2.2.0/jquery.min.js"></script>
+<body>
+<div id="orders">
+</div>
+<script>
+function approveOrder(id){
+	$.get('orders.php?action=approve&orderid=' + id, function(data){
+		loadOrders();
+	});
+}
+function deleteOrder(id){
+	$.get('orders.php?action=delete&orderid=' + id, function(data){
+		loadOrders();
+	});
+}
+
+function loadOrders(){
+	$('#orders').html("");
+	$.get('orders.php?action=getall', function(data){
+		var results = JSON.parse(data);
+		for(result in results){
+			var display = "";
+			var orderid = result;
+			var name = results[result];
+			var customerId = name.customerid;
+			var startdate = name.startdate;
+			var enddate = name.enddate;
+			var approved = name.approved;
+			display += '<div>OrderId: '+orderid+'</div>';
+			display += '<div>Customer Id: '+customerId+'</div>';
+			display += '<div>Start Date: '+startdate+'</div>';
+			display += '<div>End Date: '+enddate+'</div>';
+			display += '<div>Approved: '+approved+'</div>';
+			display += '<div class="items"><table>';
+			display += '<tr><td>Quantity</td><td>Size</td><td>Style</td><td>Warehouse</td></tr>';
+			for(item in name.items){
+				display += '<tr>';
+				var itemid = item;
+				var itemObj = name.items[item];
+				display += '<td>'+itemObj.warehousename+'</td>';
+				display += '<td>'+itemObj.stylename+'</td>';
+				display += '<td>'+itemObj.sizename+'</td>';
+				display += '<td>'+itemObj.quantity+'</td>';
+				display += '</tr>';
+			}
+			display += '</table>';
+			if(approved == 0){
+				display += '<div><input type="button" value="Approve" onclick="approveOrder('+orderid+')"> <input type="button" value="Delete" onclick="deleteOrder('+orderid+')"></div>';
+			}
+			display += '</div>';
+			$('#orders').append(display);
+		}
+	});
+}
+loadOrders();
+</script>
+</body>
+</html>

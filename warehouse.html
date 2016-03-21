@@ -1,0 +1,253 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Chair Decor</title>
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/2.2.0/jquery.min.js"></script>
+</head>
+<body>
+<script>
+function addWarehouse(){
+	$.get('warehouse.php?action=add&name=', function(data){
+		warehouses();
+	});
+}
+function deleteWarehouse(id){
+	if(confirm("Can not undo delete!")){
+		$.get('warehouse.php?action=delete&id='+id, function(data){
+			warehouses();
+		});
+	}
+}
+function saveWarehouses(){
+	$('.warehousename').each(
+		function(index){
+			var id = $(this).attr('id');
+			var name = $(this).val();
+			$.get('warehouse.php?action=update&id='+id+'&name='+name);
+		}
+	);
+	$('#status').html("Saved Warehouses");
+	warehouses();
+}
+function warehouses(){
+	var result = "";
+	$.get('warehouse.php?action=getall', function(data){
+		var warehouses = JSON.parse(data);
+		for(warehouse in warehouses){
+			var id = warehouse;
+			var name = warehouses[warehouse];
+			result += '<div><input class="warehousename" type="text" id="'+id+'" value="'+name+'"><input type="button" value="delete" onclick="deleteWarehouse('+id+')"></div>';
+		}
+		$('#content').html('Warehouses' + result + '<input type="button" value="add" onclick="addWarehouse()"><input type="button" value="save" onclick="saveWarehouses()"><input type="button" value="cancel" onclick="warehouses()">');
+	});
+}
+
+
+function addCategory(){
+	$.get('category.php?action=add&name=', function(data){
+		categories();
+	});
+}
+function deleteCategory(id){
+	if(confirm("Can not undo delete!")){
+		$.get('category.php?action=delete&id='+id, function(data){
+			categories();
+		});
+	}
+}
+function saveCategories(){
+	$('.categoryname').each(
+		function(index){
+			var id = $(this).attr('id');
+			var name = $(this).val();
+			$.get('category.php?action=update&id='+id+'&name='+name);
+		}
+	);
+	$('#status').html("Saved Categories");
+	categories();
+}
+function categories(){
+	var result = "";
+	$.get('category.php?action=getall', function(data){
+		var categories = JSON.parse(data);
+		for(category in categories){
+			var id = category;
+			var name = categories[category];
+			result += '<div><input class="categoryname" type="text" id="'+id+'" value="'+name+'"><input type="button" value="delete" onclick="deleteCategory('+id+')"></div>';
+		}
+		$('#content').html('Categories' + result + '<input type="button" value="add" onclick="addCategory()"><input type="button" value="save" onclick="saveCategories()"><input type="button" value="cancel" onclick="categories()">');
+	});
+}
+
+
+function addSize(){
+	$.get('size.php?action=add&name=', function(data){
+		sizes();
+	});
+}
+function deleteSize(id){
+	if(confirm("Can not undo delete!")){
+		$.get('size.php?action=delete&id='+id, function(data){
+			sizes();
+		});
+	}
+}
+function saveSizes(){
+	$('.sizename').each(
+		function(index){
+			var id = $(this).attr('id');
+			var name = $(this).val();
+			$.get('size.php?action=update&id='+id+'&name='+name);
+		}
+	);
+	$('#status').html("Saves Sizes");
+	sizes();
+}
+function sizes(){
+	var result = "";
+	$.get('size.php?action=getall', function(data){
+		var sizes = JSON.parse(data);
+		for(size in sizes){
+			var id = size;
+			var name = sizes[size];
+			result += '<div><input class="sizename" type="text" id="'+id+'" value="'+name+'"><input type="button" value="delete" onclick="deleteSize('+id+')"></div>';
+		}
+		$('#content').html('Sizes' + result + '<input type="button" value="add" onclick="addSize()"><input type="button" value="save" onclick="saveSizes()"><input type="button" value="cancel" onclick="sizes()">');
+	});
+}
+
+function addStyle(categoryid){
+	$.get('style.php?action=add&name=&categoryid='+categoryid, function(data){
+		styles();
+	});
+}
+function deleteStyle(id){
+	if(confirm("Can not undo delete!")){
+		$.get('style.php?action=delete&id='+id, function(data){
+			styles();
+		});
+	}
+}
+function saveStyles(){
+	$('.stylename').each(
+		function(index){
+			var id = $(this).attr('id');
+			var name = $(this).val();
+			$.get('style.php?action=update&id='+id+'&name='+name);
+		}
+	);
+	$('#status').html("Saved Styles");
+	styles();
+}
+function styles(){
+	var result = "";
+	$.get('category.php?action=getall', function(data){
+		var categories = JSON.parse(data);
+		for(category in categories){
+			var id = category;
+			var name = categories[category];
+			result += '<div>'+name+'</div><div id="category'+id+'"></div><input type="button" value="add" onclick="addStyle('+id+')">';
+		}
+		$('#content').html('Styles' + result + '<input type="button" value="save" onclick="saveStyles()"><input type="button" value="cancel" onclick="styles()">');
+		$.get('style.php?action=getall', function(data){
+			var styles = JSON.parse(data);
+			for(style in styles){
+				var id = style;
+				var name = styles[style]['name'];
+				var categoryid = styles[style]['categoryid'];
+				$('#category'+categoryid).append('<div><input class="stylename" type="text" id="'+id+'" value="'+name+'"><input type="button" value="delete" onclick="deleteStyle('+id+')"></div>');
+			}
+		});
+	});
+}
+
+function inventoryUpdate(){
+	$('.quantity').each(
+		function(index){
+			var id = $(this).attr('id');
+			var quantity = $(this).val();
+			if(quantity == ''){
+				quantity = 0;
+			}
+			var split = id.split("_");
+			var warehouseid = split[0].replace(/[a-z]*/i, "");
+			var styleid = split[1].replace(/[a-z]*/i, "");
+			var sizeid = split[2].replace(/[a-z]*/i, "");
+			$.get('inventory.php?action=add&warehouseid='+warehouseid+'&styleid='+styleid+'&sizeid='+sizeid+'&quantity='+quantity);
+		}
+	);
+	$('#status').html("Saved Inventory");
+	inventory();
+}
+
+function inventory(){
+	$.get('warehouse.php?action=getall', function(data){
+		var warehoues = JSON.parse(data);
+		var result = '';
+		for(warehouse in warehoues){
+			var id = warehouse;
+			var name = warehoues[warehouse];
+			result += '<div>'+name+'</div><div id="warehouse'+id+'"></div><div></div>';
+		}
+		$('#content').html("Inventory" + result + '<div><input type="button" value="update" onclick="inventoryUpdate()"><input type="button" value="cancel" onclick="inventory()"></div>');
+		$.get('category.php?action=getall', function(data){
+			for(warehouse in warehoues){
+				var categoryResult = '';
+				var categories = JSON.parse(data);
+				var categoryResult = '';
+				for(category in categories){
+					var categoryid = category;
+					var categoryname = categories[category];
+					categoryResult += '<div>'+categoryname+'</div><div id="category'+categoryid+'"></div>';
+				}
+				$('#warehouse'+warehouse).append(categoryResult);
+			}
+			$.get('style.php?action=getall', function(data){
+				for(warehouse in warehoues){
+					var styles = JSON.parse(data);
+					for(style in styles){
+						var stylesid = style;
+						var stylename = styles[style]['name'];
+						var stylecategoryid = styles[style]['categoryid'];
+						$('#warehouse'+warehouse+' #category'+stylecategoryid).append('<div>'+stylename+'</div><div id="style'+stylesid+'"></div>');
+					}
+				}
+				$.get('size.php?action=getall', function(data){
+					for(warehouse in warehoues){
+						for(style in styles){
+							var sizes = JSON.parse(data);
+							for(size in sizes){
+								var sizeid = size;
+								var sizename = sizes[size];
+								$('#warehouse'+warehouse+' #style'+style).append('<div>'+sizename+'</div><div id="size'+sizeid+'"><input class="quantity" id="warehouse'+warehouse+'_style'+style+'_size'+sizeid+'" type=text></div>');
+							}
+						}
+					}
+					$.get('inventory.php?action=getall', function(data){
+						var inventory = JSON.parse(data);
+						for(invid in inventory){
+							var inventoryid = invid;
+							var inventorydata = inventory[invid];
+							var idString = 'warehouse' + inventorydata['warehouseid'] + '_style' + inventorydata['styleid'] + '_size' + inventorydata['sizeid'];
+							$('#'+idString).val(inventorydata['quantity']);
+						}
+					});
+				});
+			});
+		});
+	});
+
+}
+</script>
+<div id="nav">
+<a href="#" onclick="warehouses()">Warehouses</a>
+<a href="#" onclick="categories()">Categories</a>
+<a href="#" onclick="styles()">Styles</a>
+<a href="#" onclick="sizes()">Sizes</a>
+<a href="#" onclick="inventory()">Inventory</a>
+</div>
+<div id="status"></div>
+<div id="content">
+</div>
+</body>
+</html>
